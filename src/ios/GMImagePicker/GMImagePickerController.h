@@ -69,6 +69,7 @@ static CGSize const kPopoverContentSize = {480, 720};
 
 @property (nonatomic, assign) BOOL allow_video;
 @property (nonatomic, assign) NSInteger maximumImagesCount;
+@property (nonatomic) NSString* statusbarMode;
 /**
  *  Grid customizations:
  *
@@ -231,7 +232,6 @@ static CGSize const kPopoverContentSize = {480, 720};
  *
  */
 - (void)assetsPickerController:(GMImagePickerController *)picker didUnhighlightAsset:(PHAsset *)asset;
-
 
 
 

@@ -9,7 +9,6 @@
 #import "GMImagePickerController.h"
 #import "GMAlbumsViewController.h"
 
-
 @interface GMImagePickerController () <UINavigationControllerDelegate>
 
 @end
@@ -32,7 +31,7 @@
         //Grid configuration:
         _colsInPortrait = 3;
         _colsInLandscape = 5;
-        _minimumInteritemSpacing = 2.0;
+        _minimumInteritemSpacing = 1.0;
         
         //Sample of how to select the collections you want to display:
         _customSmartCollections = @[@(PHAssetCollectionSubtypeSmartAlbumFavorites),
@@ -70,6 +69,14 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (UIColor *)colorFromHexString:(NSString *)hexString {
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hexString];
+    [scanner setScanLocation:1]; // bypass '#' character
+    [scanner scanHexInt:&rgbValue];
+    return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
+}
+
 #pragma mark - Setup Navigation Controller
 
 - (void)setupNavigationController
@@ -78,11 +85,21 @@
     _navigationController = [[UINavigationController alloc] initWithRootViewController:albumsViewController];
     _navigationController.delegate = self;
     
+    _navigationController.navigationBar.translucent = YES;
+    _navigationController.navigationBar.tintColor = [self colorFromHexString:@"#FFFFFF"];
+    _navigationController.navigationBar.backgroundColor = [self colorFromHexString:@"#FF6600"];
+    _navigationController.navigationBar.barTintColor = [self colorFromHexString:@"#FF6600"];
+    _navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [self colorFromHexString:@"#FFFFFF"]};
+    
     [_navigationController willMoveToParentViewController:self];
     [_navigationController.view setFrame:self.view.frame];
     [self.view addSubview:_navigationController.view];
     [self addChildViewController:_navigationController];
     [_navigationController didMoveToParentViewController:self];
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle {
+    return [_statusbarMode isEqual: @"light"] ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
 }
 
 #pragma mark - Select / Deselect Asset

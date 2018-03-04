@@ -7,8 +7,6 @@
 //
 
 #import "SOSPicker.h"
-
-
 #import "GMImagePickerController.h"
 #import "GMFetchItem.h"
 
@@ -41,15 +39,39 @@ typedef enum : NSUInteger {
         NSLog(@"Access has been granted.");
     } else if (status == PHAuthorizationStatusDenied) {
         NSLog(@"Access has been denied. Change your setting > this app > Photo enable");
+        [self gotoSettings];
     } else if (status == PHAuthorizationStatusNotDetermined) {
         // Access has not been determined. requestAuthorization: is available
         [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {}];
     } else if (status == PHAuthorizationStatusRestricted) {
         NSLog(@"Access has been restricted. Change your setting > Privacy > Photo enable");
+        [self gotoSettings];
     }
 
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void) gotoSettings {
+    
+    NSString *accessTitle = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    NSString *accessDescription = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSPhotoLibraryUsageDescription"];
+    
+    UIAlertController * alertController = [UIAlertController alertControllerWithTitle:accessTitle message:accessDescription preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Cancel", @"Cancel") style:UIAlertActionStyleCancel handler:nil];
+    UIAlertAction *settingsAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Change Settings", @"Change Settings") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        });
+    }];
+    
+    [alertController addAction:cancelAction];
+    [alertController addAction:settingsAction];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:alertController animated:YES completion:nil];
+    });
 }
 
 - (void) getPictures:(CDVInvokedUrlCommand *)command {
@@ -61,6 +83,7 @@ typedef enum : NSUInteger {
     NSInteger maximumImagesCount = [[options objectForKey:@"maximumImagesCount"] integerValue];
     NSString * title = [options objectForKey:@"title"];
     NSString * message = [options objectForKey:@"message"];
+    NSString * statusbarMode = [options objectForKey:@"statusbarMode"];
     BOOL disable_popover = [[options objectForKey:@"disable_popover" ] boolValue];
     if (message == (id)[NSNull null]) {
       message = nil;
@@ -70,10 +93,10 @@ typedef enum : NSUInteger {
     self.quality = [[options objectForKey:@"quality"] integerValue];
 
     self.callbackId = command.callbackId;
-    [self launchGMImagePicker:allow_video title:title message:message disable_popover:disable_popover maximumImagesCount:maximumImagesCount];
+    [self launchGMImagePicker:allow_video title:title message:message disable_popover:disable_popover maximumImagesCount:maximumImagesCount statusbarMode:statusbarMode];
 }
 
-- (void)launchGMImagePicker:(bool)allow_video title:(NSString *)title message:(NSString *)message disable_popover:(BOOL)disable_popover maximumImagesCount:(NSInteger)maximumImagesCount
+- (void)launchGMImagePicker:(bool)allow_video title:(NSString *)title message:(NSString *)message disable_popover:(BOOL)disable_popover maximumImagesCount:(NSInteger)maximumImagesCount statusbarMode:(NSString *)statusbarMode
 {
     GMImagePickerController *picker = [[GMImagePickerController alloc] init:allow_video];
     picker.delegate = self;
@@ -82,7 +105,8 @@ typedef enum : NSUInteger {
     picker.customNavigationBarPrompt = message;
     picker.colsInPortrait = 4;
     picker.colsInLandscape = 6;
-    picker.minimumInteritemSpacing = 2.0;
+    picker.minimumInteritemSpacing = 1.0;
+    picker.statusbarMode = statusbarMode;
 
     if(!disable_popover) {
         picker.modalPresentationStyle = UIModalPresentationPopover;
