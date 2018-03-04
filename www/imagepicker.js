@@ -63,7 +63,7 @@ ImagePicker.prototype.getPictures = function(success, fail, options) {
 		message: options.message ? options.message : null, // the old plugin impl didn't have it, so passing null by default
 		outputType: options.outputType ? options.outputType : this.OutputType.FILE_URI,
 		disable_popover: options.disable_popover ? options.disable_popover : false, // Disable the iOS popover as seen on iPad
-		statusbarMode: 'dark'
+		statusbarMode: options.statusbarMode ? options.statusbarMode : 'dark'
 	};
 
 	return cordova.exec(success, fail, "ImagePicker", "getPictures", [params]);
